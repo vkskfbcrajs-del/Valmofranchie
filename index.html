@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tools Pack — Modern Multi-Tool (No Libraries)</title>
+  <meta name="description" content="Tools Pack: a fast, modern, multi-tool site in pure HTML/CSS/JS. Calculator, converters, encoders, JSON tools, password/UUID/hash generators, image resizer, color contrast, timers, and notes." />
+  <meta name="color-scheme" content="dark light">
+
+  <!--
+    Tools Pack — Single-file build (HTML + CSS + JS)
+    Tech: Pure HTML, CSS, Vanilla JS. No frameworks, no external libs.
+    Theme: Dark premium UI, responsive grid/cards, smooth transitions, accessible.
+    Extras: Global search, Cmd/Ctrl+K command palette, localStorage notes, WebCrypto, Canvas.
+    Google Ads Ready: ad slots included as placeholders (no external ad script loaded).
+  -->
+
+  <style>
+    :root{
+      --bg: #1E1E2F;            /* dark navy background */
+      --card: #23233a;          /* card background */
+      --muted: #9aa0b4;
+      --text: #f2f2f7;
+      --accent: #6C8CFF;
+      --accent-2: #6cffc8;
+      --danger: #ff6c8c;
+      --ok: #7dff6c;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --radius-lg: 20px;
+      --gap: 1rem;
+      --transition: 180ms ease;
+      --focus: 0 0 0 3px rgba(108,140,255,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(108,140,255,.08), transparent 60%),
+                  radial-gradient(1200px 800px at 100% 10%, rgba(108,255,200,.06), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height:1.5;
+    }
+
+    /* Layout */
+    header{
+      position: sticky; top:0; z-index:1000;
+      backdrop-filter: saturate(140%) blur(8px);
+      background: linear-gradient(180deg, rgba(30,30,47,.9), rgba(30,30,47,.7));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .container{max-width:1200px;margin:0 auto;padding: 1rem 1.25rem}
+    .brand{
+      display:flex; align-items:center; gap:.75rem; font-weight:700; letter-spacing:.2px;
+    }
+    .brand .logo{
+      height:36px;width:36px; border-radius:12px; background:
+        conic-gradient(from 210deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow);
+    }
+    .topbar{
+      display:grid; grid-template-columns: auto 1fr auto; gap:1rem; align-items:center;
+    }
+    .searchbar{
+      display:flex; align-items:center; gap:.5rem; padding:.65rem .8rem; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08); border-radius: 12px; transition: box-shadow var(--transition), background var(--transition);
+    }
+    .searchbar:focus-within{ box-shadow: var(--focus); background:rgba(255,255,255,.09) }
+    .searchbar input{
+      width:100%; background:transparent; border:none; outline:none; color:var(--text); font-size: .95rem;
+    }
+    .kbd{
+      font-variant: all-small-caps; opacity:.75; border:1px solid rgba(255,255,255,.15); padding:.1rem .35rem; border-radius:6px; font-size:.75rem;
+    }
+    .actions{display:flex; gap:.5rem; align-items:center}
+    .btn{
+      cursor:pointer; border:none; color:var(--text); background:linear-gradient(180deg,#2a2a46,#1f1f35);
+      border:1px solid rgba(255,255,255,.08); padding:.6rem .9rem; border-radius:12px;
+      transition: transform var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+    .btn:hover{ transform: translateY(-1px); background: linear-gradient(180deg,#303051,#22223a) }
+    .btn:focus-visible{ outline: none; box-shadow: var(--focus) }
+
+    main{padding: 1rem 0 4rem}
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--gap);
+    }
+    @media (max-width: 1024px){
+      .grid{ grid-template-columns: repeat(8,1fr) }
+    }
+    @media (max-width: 720px){
+      .topbar{ grid-template-columns: 1fr; gap:.75rem }
+      .grid{ grid-template-columns: repeat(4,1fr) }
+    }
+
+    /* Card */
+    .card{
+      grid-column: span 4;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: clip;
+      display:flex; flex-direction:column; min-height: 220px;
+      transition: transform var(--transition), border-color var(--transition), background var(--transition);
+    }
+    .card:hover{ transform: translateY(-2px); border-color: rgba(255,255,255,.14); background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)) }
+    .card h2{
+      font-size:1.05rem; margin:0;
+    }
+    .card-header{
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+      padding: .9rem 1rem; border-bottom: 1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(0,0,0,.08), transparent)
+    }
+    .card-body{ padding: 1rem; display:flex; flex-direction:column; gap:.65rem; flex:1 }
+    .row{ display:flex; gap:.5rem; align-items:center; flex-wrap: wrap}
+    .row > *{ flex: 1 1 auto }
+    .input, textarea, select{
+      width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text);
+      padding:.6rem .7rem; border-radius:10px; outline:none; transition: box-shadow var(--transition), background var(--transition);
+    }
+    .input:focus, textarea:focus, select:focus{ box-shadow: var(--focus); background: rgba(255,255,255,.1) }
+    textarea{ min-height:130px; resize:vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .muted{ color: var(--muted); font-size:.9rem }
+    .help{ font-size:.8rem; opacity:.8 }
+    .pill{
+      padding:.25rem .5rem; border-radius: 999px; font-size:.75rem; border:1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06);
+    }
+    .tag-ok{ border-color: rgba(125,255,108,.4); color:#cffff0 }
+    .tag-bad{ border-color: rgba(255,108,140,.4); color:#ffdfe6 }
+    .divider{ height:1px; background: rgba(255,255,255,.08); margin:.5rem 0 }
+
+    /* Ad slots (Google Ads Ready – placeholders only) */
+    .ad-slot{
+      grid-column: 1 / -1;
+      padding: .75rem; border:1px dashed rgba(255,255,255,.2); border-radius: 14px; text-align:center;
+      background: repeating-linear-gradient(45deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 10px, rgba(255,255,255,.06) 10px, rgba(255,255,255,.06) 20px);
+      color: var(--muted);
+    }
+
+    /* Command Palette */
+    .cmdk{
+      position: fixed; inset: 0; display:none; place-items:center; background: rgba(0,0,0,.45);
+      backdrop-filter: blur(6px); z-index: 2000;
+    }
+    .cmdk[aria-hidden="false"]{ display:grid }
+    .cmdk-panel{
+      width:min(720px, 92vw); max-height: 70vh; overflow:auto; border-radius: 16px;
+      background: linear-gradient(180deg, #26263e, #1f1f33); border:1px solid rgba(255,255,255,.1); box-shadow: var(--shadow);
+    }
+    .cmdk-header{ padding:.75rem; border-bottom:1px solid rgba(255,255,255,.08) }
+    .cmdk-search{ display:flex; gap:.5rem; align-items:center; padding:.5rem .6rem; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius: 10px }
+    .cmdk-search input{ flex:1; background:transparent; border:none; outline:none; color:var(--text) }
+    .cmdk-list{ padding:.25rem }
+    .cmdk-item{
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+      padding:.7rem .85rem; border-radius: 10px; cursor:pointer;
+    }
+    .cmdk-item[aria-selected="true"], .cmdk-item:hover{
+      background: rgba(108,140,255,.14);
+      border:1px solid rgba(108,140,255,.35);
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .btn,.card{ transition: none }
+    }
+  </style>
+</head>
+<body>
+  <header role="banner" aria-label="Top Navigation">
+    <div class="container topbar">
+      <div class="brand" aria-label="Tools Pack Brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div>Tools Pack</div>
+          <div class="muted" style="font-size:.8rem">Premium, fast, and private — in your browser</div>
+        </div>
+      </div>
+
+      <!-- Global Search -->
+      <label class="searchbar" aria-label="Search tools">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="globalSearch" type="search" placeholder="Search tools… (try: json, base64, color, timer)" autocomplete="off" />
+        <span class="kbd" aria-hidden="true">⌘/Ctrl + K</span>
+      </label>
+
+      <div class="actions">
+        <button id="openCmd" class="btn" title="Open Command Palette (Ctrl/Cmd+K)" aria-label="Open Command Palette">Command Palette</button>
+        <a class="btn" href="#notes" title="Jump to Quick Notes">Notes</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <!-- Google Ads Ready: drop your adsbygoogle script and slot markup where needed -->
+    <div class="grid" id="toolsGrid">
+
+      <div class="ad-slot" role="complementary" aria-label="Ad slot">
+        Google Ads Ready — place your ad code here (no external scripts loaded by default).
+      </div>
+
+      <!-- 1) Calculator -->
+      <section class="card tool" id="calculator" data-name="Calculator">
+        <div class="card-header">
+          <h2>Calculator</h2>
+          <span class="pill">Basic arithmetic</span>
+        </div>
+        <div class="card-body">
+          <input id="calcInput" class="input" inputmode="decimal" placeholder="Type expression, e.g., (12.5 + 3) / 5 * 2" aria-label="Calculator expression" />
+          <div class="row">
+            <button class="btn" data-calc="7">7</button>
+            <button class="btn" data-calc="8">8</button>
+            <button class="btn" data-calc="9">9</button>
+            <button class="btn" data-calc="/">÷</button>
+          </div>
+          <div class="row">
+            <button class="btn" data-calc="4">4</button>
+            <button class="btn" data-calc="5">5</button>
+            <button class="btn" data-calc="6">6</button>
+            <button class="btn" data-calc="*">×</button>
+          </div>
+          <div class="row">
+            <button class="btn" data-calc="1">1</button>
+            <button class="btn" data-calc="2">2</button>
+            <button class="btn" data-calc="3">3</button>
+            <button class="btn" data-calc="-">−</button>
+          </div>
+          <div class="row">
+            <button class="btn" data-calc="0">0</button>
+            <button class="btn" data-calc=".">.</button>
+            <button class="btn" id="calcClear">AC</button>
+            <button class="btn" data-calc="+">+</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="calcEval" aria-label="Evaluate">=</button>
+            <div class="muted" id="calcError" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2) Unit Converter -->
+      <section class="card tool" id="unit-converter" data-name="Unit Converter">
+        <div class="card-header"><h2>Unit Converter</h2><span class="pill">Length · Weight · Temp</span></div>
+        <div class="card-body">
+          <div class="row">
+            <select id="ucCategory" aria-label="Category">
+              <option value="length">Length</option>
+              <option value="weight">Weight</option>
+              <option value="temperature">Temperature</option>
+            </select>
+            <input id="ucValue" class="input" type="number" step="any" placeholder="Value" aria-label="Input value" />
+          </div>
+          <div class="row">
+            <select id="ucFrom" aria-label="From unit"></select>
+            <select id="ucTo" aria-label="To unit"></select>
+          </div>
+          <div class="row">
+            <button id="ucSwap" class="btn" aria-label="Swap units">Swap ↔</button>
+            <input id="ucResult" class="input" type="text" placeholder="Result" readonly aria-label="Result" />
+          </div>
+          <div class="help muted">Accurate conversions computed in your browser.</div>
+        </div>
+      </section>
+
+      <!-- 3) Text Utilities -->
+      <section class="card tool" id="text-utils" data-name="Text Utilities">
+        <div class="card-header"><h2>Text Utilities</h2><span class="pill">Case · Count · Trim</span></div>
+        <div class="card-body">
+          <textarea id="tuInput" placeholder="Paste or type text…" aria-label="Text input"></textarea>
+          <div class="row">
+            <button class="btn" id="tuUpper">UPPERCASE</button>
+            <button class="btn" id="tuLower">lowercase</button>
+            <button class="btn" id="tuRemoveSpaces">Remove spaces</button>
+            <button class="btn" id="tuCopy" title="Copy output">Copy</button>
+          </div>
+          <div class="divider"></div>
+          <div class="row">
+            <div class="muted" id="tuStats" aria-live="polite">Words: 0 · Characters: 0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4) Base64 Encode/Decode -->
+      <section class="card tool" id="base64" data-name="Base64">
+        <div class="card-header"><h2>Base64 Encode/Decode</h2><span class="pill">Text only</span></div>
+        <div class="card-body">
+          <textarea id="b64Input" placeholder="Enter text to encode or base64 to decode…" aria-label="Base64 input"></textarea>
+          <div class="row">
+            <button class="btn" id="b64Encode">Encode</button>
+            <button class="btn" id="b64Decode">Decode</button>
+            <button class="btn" id="b64Copy">Copy Output</button>
+          </div>
+          <textarea id="b64Output" placeholder="Output…" aria-label="Base64 output" readonly></textarea>
+          <div class="muted" id="b64Error" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- 5) URL Encoder/Decoder -->
+      <section class="card tool" id="url-tools" data-name="URL Tools">
+        <div class="card-header"><h2>URL Encoder/Decoder</h2><span class="pill">escape · unescape</span></div>
+        <div class="card-body">
+          <textarea id="urlInput" placeholder="Enter URL or text…" aria-label="URL input"></textarea>
+          <div class="row">
+            <button class="btn" id="urlEncode">Encode</button>
+            <button class="btn" id="urlDecode">Decode</button>
+            <button class="btn" id="urlCopy">Copy Output</button>
+          </div>
+          <textarea id="urlOutput" placeholder="Output…" aria-label="URL output" readonly></textarea>
+        </div>
+      </section>
+
+      <!-- 6) JSON Formatter/Validator -->
+      <section class="card tool" id="json" data-name="JSON Formatter">
+        <div class="card-header"><h2>JSON Formatter/Validator</h2><span class="pill">pretty · minify · validate</span></div>
+        <div class="card-body">
+          <textarea id="jsonInput" placeholder='Paste JSON here…' aria-label="JSON input"></textarea>
+          <div class="row">
+            <button class="btn" id="jsonPretty">Pretty Print</button>
+            <button class="btn" id="jsonMinify">Minify</button>
+            <button class="btn" id="jsonValidate">Validate</button>
+            <button class="btn" id="jsonCopy">Copy</button>
+          </div>
+          <textarea id="jsonOutput" placeholder="Output…" aria-label="JSON output" readonly></textarea>
+          <div class="muted" id="jsonStatus" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- 7) Password Generator -->
+      <section class="card tool" id="password" data-name="Password Generator">
+        <div class="card-header"><h2>Password Generator</h2><span class="pill">custom length & sets</span></div>
+        <div class="card-body">
+          <div class="row">
+            <label class="muted">Length <input id="pwLength" type="range" min="6" max="64" value="16" aria-label="Password length" /></label>
+            <input id="pwLengthNum" class="input" type="number" min="6" max="64" value="16" aria-label="Length input" />
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="pwLower" checked /> a-z</label>
+            <label><input type="checkbox" id="pwUpper" checked /> A-Z</label>
+            <label><input type="checkbox" id="pwDigits" checked /> 0-9</label>
+            <label><input type="checkbox" id="pwSymbols" /> !@#$…</label>
+          </div>
+          <div class="row">
+            <input id="pwOutput" class="input" type="text" readonly aria-label="Generated password" />
+            <button class="btn" id="pwGenerate">Generate</button>
+            <button class="btn" id="pwCopy">Copy</button>
+          </div>
+          <div id="pwStrength" class="muted">Strength: —</div>
+        </div>
+      </section>
+
+      <!-- 8) UUID Generator (v4) -->
+      <section class="card tool" id="uuid" data-name="UUID v4">
+        <div class="card-header"><h2>UUID Generator (v4)</h2><span class="pill">WebCrypto</span></div>
+        <div class="card-body">
+          <div class="row">
+            <input id="uuidOutput" class="input" type="text" readonly aria-label="Generated UUID" />
+            <button class="btn" id="uuidNew">Generate UUID</button>
+            <button class="btn" id="uuidCopy">Copy</button>
+          </div>
+          <div class="help muted">UUID v4 uses cryptographically secure randomness.</div>
+        </div>
+      </section>
+
+      <!-- 9) Hash Generator (SHA-256) -->
+      <section class="card tool" id="hash" data-name="Hash (SHA-256)">
+        <div class="card-header"><h2>Hash Generator</h2><span class="pill">SHA-256 · WebCrypto</span></div>
+        <div class="card-body">
+          <textarea id="hashInput" placeholder="Enter text to hash…" aria-label="Hash input"></textarea>
+          <div class="row">
+            <button class="btn" id="hashCompute">Compute SHA-256</button>
+            <button class="btn" id="hashCopy">Copy</button>
+          </div>
+          <input id="hashOutput" class="input" type="text" readonly aria-label="SHA-256 output" />
+        </div>
+      </section>
+
+      <!-- 10) Image Resizer & Compressor -->
+      <section class="card tool" id="image-tool" data-name="Image Resizer">
+        <div class="card-header"><h2>Image Resizer & Compressor</h2><span class="pill">Canvas · offline</span></div>
+        <div class="card-body">
+          <div class="row">
+            <input id="imgFile" class="input" type="file" accept="image/*" aria-label="Upload image" />
+          </div>
+          <div class="row">
+            <input id="imgWidth" class="input" type="number" min="1" placeholder="Width (px)" aria-label="Width" />
+            <input id="imgHeight" class="input" type="number" min="1" placeholder="Height (px)" aria-label="Height" />
+          </div>
+          <div class="row">
+            <label class="muted">Quality (JPEG/WebP): <input id="imgQuality" type="range" min="10" max="100" value="85" /></label>
+            <label><input type="checkbox" id="imgKeepAspect" checked /> Keep aspect</label>
+            <select id="imgFormat" aria-label="Output format">
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+              <option value="image/png">PNG (lossless)</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="btn" id="imgProcess">Process</button>
+            <a id="imgDownload" class="btn" download="resized-image" aria-label="Download image" href="#">Download</a>
+          </div>
+          <canvas id="imgCanvas" style="max-width:
